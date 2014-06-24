@@ -106,25 +106,23 @@
 		 */
 		arcane override function getFragmentCode(animationCode:String):String
 		{
-			// TODO: not used
-			animationCode = animationCode;
-			var code:String;
-			var wrap:String = _repeat? "wrap" : "clamp";
-			var filter:String;
-			
-			if (_smooth)
-				filter = _mipmap? "linear,miplinear" : "linear";
-			else
-				filter = _mipmap? "nearest,mipnearest" : "nearest";
-			
 			// squared distance to view
-			code = "dp3 ft2.z, v0.xyz, v0.xyz	\n" +
+			var code:String =
+				"dp3 ft2.z, v0.xyz, v0.xyz	\n" +
 				"mul ft0, fc0, ft2.z	\n" +
 				"frc ft0, ft0			\n" +
 				"mul ft1, ft0.yzww, fc1	\n";
 			
 			if (_alphaThreshold > 0) {
-				var format:String;
+				var wrap:String = _repeat ? "wrap" : "clamp";
+				var filter:String, format:String;
+				var enableMipMaps:Boolean = _mipmap && _alphaMask.hasMipMaps;
+				
+				if (_smooth)
+					filter = enableMipMaps ? "linear,miplinear" : "linear";
+				else
+					filter = enableMipMaps ? "nearest,mipnearest" : "nearest";
+				
 				switch (_alphaMask.format) {
 					case Context3DTextureFormat.COMPRESSED:
 						format = "dxt1,";
