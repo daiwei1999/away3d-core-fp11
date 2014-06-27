@@ -18,16 +18,15 @@ package away3d.textures
 		protected var _format:String = Context3DTextureFormat.BGRA;
 		protected var _hasMipmaps:Boolean = true;
 		
-		protected var _textures:Vector.<TextureBase>;
-		protected var _dirty:Vector.<Context3D>;
+		protected var _textures:Vector.<TextureBase> = new Vector.<TextureBase>(8);
+		protected var _textureContext:Vector.<Context3D> = new Vector.<Context3D>(8);
+		protected var _textureInvalid:Vector.<Boolean> = new Vector.<Boolean>(8, true);
 		
 		protected var _width:int;
 		protected var _height:int;
 		
 		public function TextureProxyBase()
 		{
-			_textures = new Vector.<TextureBase>(8);
-			_dirty = new Vector.<Context3D>(8);
 		}
 		
 		public function get hasMipMaps():Boolean
@@ -61,10 +60,14 @@ package away3d.textures
 			var tex:TextureBase = _textures[contextIndex];
 			var context:Context3D = stage3DProxy._context3D;
 			
-			if (!tex || _dirty[contextIndex] != context) {
+			if (!tex || _textureContext[contextIndex] != context) {
 				_textures[contextIndex] = tex = createTexture(context);
-				_dirty[contextIndex] = context;
+				_textureContext[contextIndex] = context;
+				_textureInvalid[contextIndex] = true;
+			}
+			if (_textureInvalid[contextIndex]) {
 				uploadContent(tex);
+				_textureInvalid[contextIndex] = false;
 			}
 			
 			return tex;
@@ -87,18 +90,15 @@ package away3d.textures
 		public function invalidateContent():void
 		{
 			for (var i:int = 0; i < 8; ++i)
-				_dirty[i] = null;
+				_textureInvalid[i] = true;
 		}
 		
 		protected function invalidateSize():void
 		{
-			var tex:TextureBase;
 			for (var i:int = 0; i < 8; ++i) {
-				tex = _textures[i];
-				if (tex) {
-					tex.dispose();
+				if (_textures[i]) {
+					_textures[i].dispose();
 					_textures[i] = null;
-					_dirty[i] = null;
 				}
 			}
 		}
